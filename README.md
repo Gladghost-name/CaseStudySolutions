@@ -1,6 +1,6 @@
 # Case Study Solutions
 
-## LocalBuka Assistant & Recommendation Logic
+## LocalBuka Conversational Assistant Prototype & Recommendation Logic
 
 ### ✓ Recommendation / Search Logic (Core Task)
 
