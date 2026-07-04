@@ -39,9 +39,9 @@ A semantic search algorithm leveraging the `BAAI/bge-m3` Sentence Transformer. I
 2. **Launch the App:**
 Open your terminal, navigate to your localbuka_project folder, and start the Streamlit server:
 
-```bash
-streamlit run app.py
-```
+   ```bash
+   streamlit run conversational_assistant.py
+   ```
 
 ----
 **Project Structure:**
