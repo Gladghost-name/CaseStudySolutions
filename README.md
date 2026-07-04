@@ -7,6 +7,10 @@
 A semantic search algorithm leveraging the `BAAI/bge-m3` Sentence Transformer. It embeds dynamic user preference profiles (including price tolerance, dietary limits, and spice preferences) and computes cosine similarity against pre-computed restaurant metadata vectors, returning a mathematically ranked threshold of top recommendations
 
 #### How to Run
+Open your terminal, navigate to your CaseStudySolutions folder
+   ```bash
+   cd CaseStudySolutions
+   ```
 
 1. **Install the Required Dependencies:**
    Make sure you have `torch`, `sentence-transformers`, and `pandas` installed in your Python environment.
@@ -37,7 +41,7 @@ A semantic search algorithm leveraging the `BAAI/bge-m3` Sentence Transformer. I
    ```
 
 2. **Launch the App:**
-Open your terminal, navigate to your localbuka_project folder, and start the Streamlit server:
+Open your terminal, navigate to your CaseStudySolutions folder, and start the Streamlit server:
 
    ```bash
    streamlit run conversational_assistant.py
