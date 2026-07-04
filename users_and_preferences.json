@@ -1,0 +1,55 @@
+[
+    {
+        "Name": "Chioma A.",
+        "Preferences": {
+            "Primary Cuisine Type": "Continental & Pastries",
+            "Secondary Cuisine Type": "Lebanese / Mediterranean",
+            "Price Range": "₦15,000 – ₦30,000",
+            "Past Orders": ["Creamy Seafood Pasta with Garlic Bread", 
+                            "Chicken Shawarma Platter with Hummus and Pita", 
+                            "Fluffy Buttermilk Pancakes with Berry Compote", 
+                            "Grilled Croaker Fish with Yam Chips"],
+            "Dietary Restrictions": ["Lactose-Intolerant Friendly Options Preferred", "Low Sodium"],
+            "Spice Tolerance": "Mild / Medium",
+            "Ordering Channels": ["Instagram DM", "Chowdeck", "Dine-in Reservation"],
+            "Peak Ordering Times": ["Saturday Brunch", "Wednesday Evening"],
+            "Key Decision Drivers": ["Aesthetic presentation", "Ingredient freshness", "Premium packaging"]
+        }
+    },
+    
+    {
+        "Name": "Femi K.",
+        "Preferences": {
+            "Primary Cuisine Type": "Grills & Fast Food",
+            "Secondary Cuisine Type": "Traditional Nigerian (Local Buka Style)",
+            "Price Range": "₦5,000 – ₦12,000",
+            "Past Orders": ["Double Cheeseburger with Loaded Fries", 
+                            "Amala with Abula (Gbegiri, Ewedu, and Assorted Meat)", 
+                            "Spicy Grilled Chicken Wings", 
+                            "Boli and Fish with Pepper Sauce"],
+            "Dietary Restrictions": ["None"],
+            "Spice Tolerance": "High",
+            "Ordering Channels": ["Glovo", "Bolt Food", "Walk-in"],
+            "Peak Ordering Times": ["Friday Night", "Monday Lunch"],
+            "Key Decision Drivers": ["Discounts and Promos", "Consistency in taste", "Late-night availability"]
+        }
+    },
+
+    {
+        "Name": "Tunde O.",
+        "Preferences": {
+            "Primary Cuisine Type": "Traditional Nigerian (Contemporary twist)",
+            "Secondary Cuisine Type": "Pan-Asian",
+            "Price Range": "₦12,000 – ₦25,000",
+            "Past Orders": ["Smokey Party Jollof Rice with Grilled Peppered Turkey and Fried Plantain", 
+                            "Seafood Okra Soup with Oatmeal Swallow", 
+                            "Spicy Singapore Noodles with Shredded Beef", 
+                            "Gourmet Asun"],
+            "Dietary Restrictions": ["No Pork", "High Protein / Moderate Carb"],
+            "Spice Tolerance": "Very High",
+            "Ordering Channels": ["Chowdeck", "Bolt Food", "WhatsApp"],
+            "Peak Ordering Times": ["Friday", "Sunday"],
+            "Key Decision Drivers": ["Portion size to price ratio", "delivery speed"]
+        }
+    }
+]

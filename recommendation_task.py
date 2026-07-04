@@ -1,50 +1,103 @@
-from gliclass import GLiClassModel, ZeroShotClassificationWithChunkingPipeline
-from transformers import AutoTokenizer
+from sentence_transformers import SentenceTransformer, util
+import json
+import pandas as pd
 
-model = GLiClassModel.from_pretrained("knowledgator/gliclass-large-v3.0")
-tokenizer = AutoTokenizer.from_pretrained("knowledgator/gliclass-large-v3.0")
-gliclass_pipeline = ZeroShotClassificationWithChunkingPipeline(model, tokenizer, classification_type='multi-label', device='cpu')
+# 1. Initialize the BGE-M3 model
+print("Loading BAAI/bge-m3 for semantic classification, Please Wait...")
+model = SentenceTransformer("BAAI/bge-m3")
 
-text = """
-Attribute,User Data
-User ID / Name,"Tunde O. (Lekki, Lagos)"
-Primary Cuisine Type,Traditional Nigerian (Contemporary twist) & Afro-Continental fusion
-Secondary Cuisine Type,Pan-Asian (Strong preference for Nigerian-Chinese / Spicy Wok dishes)
-Price Range,"Mid-to-High (₦12,000 – ₦25,000 per meal / roughly $8–$16 USD)"
-Past Orders,*   Smokey Party Jollof Rice with Grilled Peppered Turkey and Fried Plantain (Dodo)*   Seafood Okra Soup with Oatmeal Swallow*   Spicy Singapore Noodles with Shredded Beef (Nigerian-Chinese style)*   Gourmet Asun (Spicy peppered goat meat) platter
-Dietary Restrictions,*   No Pork (Religious/personal preference)*   High Protein / Moderate Carb (Leans towards fitness-conscious traditional eating)
-Spice Tolerance,Very High (Standard Nigerian palette; expects heavy use of scotch bonnet/atarodo)
-Ordering Channels,"Chowdeck (Primary), Bolt Food, and direct WhatsApp ordering for local kitchen caterers"
-Peak Ordering Times,*   Fridays (Dinner / Late-night wind-down)*   Sundays (Family-style lunch)
-Key Decision Drivers,"Portion size to price ratio (Value for money is critical, even at premium tiers), and delivery speed (expects food hot upon arrival)."
-"""
+restaurants_data = json.load(open("restaurants.json", "r+"))
+dishes_data = json.load(open("dishes.json", "r+"))
+users_and_preferences = json.load(open("users_and_preferences.json", "r+"))
 
-nigerian_restaurants = [
-    "NOK by Alara",
-    "Yellow Chilli",
-    "Terra Kulture Food Lounge",
-    "Ile Eros",
-    "Ofada Boy",
-    "Z Kitchen",
-    "SLoW Lagos",
-    "Shiro Lagos",
-    "Danfo Bistro",
-    "Glover Court Suya",
-    "Blackbell",
-    "Craft Gourmet by Lou Baker",
-    "The House Lagos",
-    "RSVP Lagos",
-    "Ocean Basket VI",
-    "Izanagi",
-    "La Veranda",
-    "Cactus Restaurant",
-    "Rora Lagos",
-    "The Ona"
-]
+dishes_names = list(dishes_data.keys())
+dishes_descriptions = list(dishes_data.values())
+
+# Pre-compute the embeddings for the dishes descriptions
+print("Embedding dishes...")
+dishes_embeddings = model.encode(dishes_descriptions, convert_to_tensor=True)
 
 
-results = gliclass_pipeline(text, 
-        nigerian_restaurants, 
-        .2, 
-        prompt="Recommend restaurants based on user's preference.")[0]
-print(results)
+restaurant_names = list(restaurants_data.keys())
+restaurant_descriptions = list(restaurants_data.values())
+
+# Pre-compute the embeddings for the restaurants descriptions
+print("Embedding restaurants...")
+restaurants_embeddings = model.encode(restaurant_descriptions, convert_to_tensor=True)
+
+
+def convert_to_ranked_csv(data_list, recommendation_class: str):
+    # 1. Load into a DataFrame with specific column names
+    df = pd.DataFrame(data_list, columns=[recommendation_class, 'Score'])
+    
+    df = df.sort_values(by='Score', ascending=False).reset_index(drop=True)
+    df['Rank'] = df.index + 1
+    df = df[['Rank', recommendation_class, 'Score']]
+    ranked_csv = df.to_csv(index=False)
+    return ranked_csv
+
+
+def recommend_restaurants(preferences, restaurants):
+    df = pd.json_normalize(preferences)
+    preferences = df.to_csv(index=False)
+
+    # Embed the incoming text
+    preference_embedding = model.encode(preferences, convert_to_tensor=True)
+
+    # Calculate cosine similarity between the preferences and restaurants data.
+    scores = util.cos_sim(preference_embedding, restaurants_embeddings)[0]
+
+    threshold = .5
+    recommendations = [
+        (restaurant_names[i], scores[i].item()) 
+        for i in range(len(restaurant_names))
+        if scores[i] > threshold # recommend if semantic similarity is greater than 50%
+    ]
+
+    # Ranking recommendations by semantic relationship (high to low).
+    recommendations.sort(key=lambda x: x[1], reverse=True)
+    return recommendations
+
+
+
+
+def recommend_dishes(preferences, dishes):
+    df = pd.json_normalize(preferences)
+    preferences = df.to_csv(index=False)
+
+    # Embed the user's preferences.
+    preference_embedding = model.encode(preferences, convert_to_tensor=True)
+
+    # Calculate cosine similarity between the preferences and dishes data.
+    scores = util.cos_sim(preference_embedding, dishes_embeddings)[0]
+
+    threshold = .5
+    recommendations = [
+        (dishes_names[i], scores[i].item()) 
+        for i in range(len(dishes_names))
+        if scores[i] > threshold # Only recommend if semantic similarity is greater than 50%
+    ]
+
+    # Ranking recommendations by semantic relationship (high to low).
+    recommendations.sort(key=lambda x: x[1], reverse=True)
+    return recommendations
+
+
+
+# Generating 3 sample test-cases:
+for user in users_and_preferences:
+    print("Fetching recommendations for", user["Name"], "...")
+    restaurant_recommendations = recommend_restaurants(
+        user["Preferences"],
+        restaurants_data
+        )
+
+    print("RESTAURANT RECOMMENDATIONS")
+    print(convert_to_ranked_csv(restaurant_recommendations, "Restaurants"))
+    dish_recommendations = recommend_dishes(
+        user["Preferences"],
+        dishes_data
+    )
+
+    print("DISH RECOMMENDATIONS")
+    print(convert_to_ranked_csv(dish_recommendations, "Dishes"))

@@ -3,20 +3,24 @@ from google import genai
 from google.genai import types
 import json
 
-restaurants = json.load(open("restaurantsv2.json"))
+restaurants = json.load(open("restaurants.json"))
+dishes = json.load(open("dishes.json"))
 
 
-# Page configuration
 SYSTEM_INSTRUCTION = f"""
-Your name is adara gladness, you are a assistant for localbuka. your goal is to take a user's free-text message and respond helpfully
-using this restaurant data:
+Your name is Tunde, A conversational assistant for localbuka. your goal is to take a user's free-text message and respond helpfully using the data provided.
+here is the available restaurants data
 {restaurants}
+
+here is the available dishes data:
+{dishes}
 """
 
-
-st.set_page_config(page_title="Gemini 2.5 Flash Chat", page_icon="🥘", layout="centered")
-st.title("LocalBuka Chat Assistant Prototype")
+# Page configuration
+st.set_page_config(page_title="LocalBuka AI Chat", page_icon="🥘", layout="centered")
+st.title("🥘 LocalBuka Chat Assistant Prototype")
 st.caption("A locabuka conversational chatbot powered by the gemini-2.5-flash model.")
+
 
 # --- Sidebar for Authentication ---
 with st.sidebar:
@@ -31,16 +35,20 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
 
-# --- Initialize Gemini Client ---
-# The modern SDK uses genai.Client()
+
 client = None
+
 if api_key:
     client = genai.Client(api_key=api_key)
-elif "GEMINI_API_KEY" in st.secrets:
-    client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+else:
+    try:
+        if "GEMINI_API_KEY" in st.secrets:
+            client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+    except Exception:
+        pass
+
 
 # --- Initialize Chat History ---
-# We store history in a standard format to render in Streamlit
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -57,15 +65,13 @@ if prompt := st.chat_input("Type your message here..."):
         st.error("Please provide a Gemini API Key in the sidebar or set it as an environment variable to chat.")
         st.stop()
 
-    # 1. Display user message immediately & append to session history
     with st.chat_message("user"):
         st.markdown(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    # 2. Reconstruct the full chat history in the format required by the Google GenAI SDK
+    # Load the full chat history in the format required by the GenAI SDK
     formatted_history = []
     for msg in st.session_state.messages:
-        # Maps standard roles to Gemini's expected types
         role_map = "user" if msg["role"] == "user" else "model"
         formatted_history.append(
             types.Content(
@@ -74,34 +80,30 @@ if prompt := st.chat_input("Type your message here..."):
             )
         )
 
-    # 3. Stream the Assistant Response from Gemini
+    # Streaming the Assistant Response from Gemini
     with st.chat_message("assistant"):
         response_placeholder = st.empty()
         full_response = ""
         
         try:
-            # We initialize the chat session with our accumulated history
+            # We initialize the chat session with history.
             chat_config = types.GenerateContentConfig(
                 system_instruction=SYSTEM_INSTRUCTION
             )
 
-
             chat = client.chats.create(
                 model="gemini-2.5-flash",
                 config=chat_config,
-                history=formatted_history[:-1] # Pass all history except the newest message
+                history=formatted_history[:-1] # Pass all history except the newest one.
             )
             
-            # Send the latest user message and stream the chunks
             response_stream = chat.send_message_stream(prompt)
             
             for chunk in response_stream:
                 if chunk.text:
                     full_response += chunk.text
-                    # Live typing effect
                     response_placeholder.markdown(full_response + "▌")
                 
-            # Remove the cursor block when finished
             response_placeholder.markdown(full_response)
             
         except Exception as e:
@@ -109,5 +111,4 @@ if prompt := st.chat_input("Type your message here..."):
             full_response = "Sorry, I ran into an error generating that response."
             response_placeholder.markdown(full_response)
 
-    # 4. Save assistant response to state
     st.session_state.messages.append({"role": "assistant", "content": full_response})
