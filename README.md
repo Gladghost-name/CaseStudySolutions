@@ -26,6 +26,7 @@ Open your terminal, navigate to your CaseStudySolutions folder
    python run_recommendation.py
    ```
 
+##### Note: View users_and_preferences.json file to see the 3 sample users and their preferences. The test cases results is present in recommendation_task_results.txt
 ----
 
 ### ✓ Conversational Assistant Prototype
